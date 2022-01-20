@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c7b3571d-e3a3-45be-8aae-71da0da15610" >
+		<http:listener-connection host="localhost" port="8082" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="6db3c0fb-df0d-40ae-b64b-b477bbcb6649" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="Vinodchiru@123" database="foreachdb" />
+	</db:config>
+	<flow name="foreachFlow" doc:id="ced14d45-aee5-45cd-92ea-677eaa64db09" >
+		<http:listener doc:name="Listener" doc:id="303365b4-cb10-4e56-8a1a-06f31a8f800f" config-ref="HTTP_Listener_config" path="/foreach"/>
+		<ee:transform doc:name="Transform Message" doc:id="5a2b7e61-9ddd-473e-b899-c3a96f55c0b5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+1 to 300 map {
+	
+	empid: 100+$$,
+	empname: "vinod",
+	empage: 25
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="9dce9b5a-c4fe-4347-b57b-20225951aa63" >
+			<logger level="INFO" doc:name="Logger" doc:id="a6d5c607-50a6-4210-8f78-d049aa3eaf9c" message="#[payload]"/>
+			<db:insert doc:name="Insert" doc:id="90ce55b4-0f5d-4549-b2e6-8ca4ed891fd3" config-ref="Database_Config">
+				<db:sql ><![CDATA[insert into foreachdb.emp (empid, empname, empage) values (:empid, :empname, :empage)]]></db:sql>
+				<db:input-parameters ><![CDATA[#[payload]]]></db:input-parameters>
+			</db:insert>
+		</foreach>
+	</flow>
+</mule>
