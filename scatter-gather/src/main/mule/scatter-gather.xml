@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="25c5f40d-1eb4-45f2-a768-d63e3a470c23" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<flow name="scatter-gatherFlow" doc:id="fd25411b-c6ca-4688-8375-a511d98eedcd" >
+		<http:listener doc:name="Listener" doc:id="e7239f80-523f-47d4-9023-369efad646ac" config-ref="HTTP_Listener_config" path="/scatter-gather"/>
+		<logger level="INFO" doc:name="Logger" doc:id="9a2eed91-6ac4-4bf3-aaa1-d5c2f809bd91" message="starting"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="9f630893-7f00-4508-a33c-d0ffae47e87d" >
+			<route >
+				<logger level="INFO" doc:name="Logger" doc:id="26a450c2-eeda-4151-8be9-d77a055731cb" message="1"/>
+			</route>
+			<route >
+				<logger level="INFO" doc:name="Logger" doc:id="35b5815c-8540-4a66-aa6d-10438cb81196" message="2"/>
+			</route>
+			<route >
+				<flow-ref doc:name="Flow Reference" doc:id="f2bb573e-376f-49e2-9955-a0c81dcba53d" name="scatter-gatherSub_Flow"/>
+				<logger level="INFO" doc:name="Logger" doc:id="f6aaefd3-b90a-40a0-87c0-a4380040e53e" message="3"/>
+			</route>
+			<route >
+				<logger level="INFO" doc:name="Logger" doc:id="1ee07bc2-4116-468b-811d-861b79a3ff12" message="4"/>
+			</route>
+			<route >
+				<logger level="INFO" doc:name="Logger" doc:id="973e878b-4e9d-4634-ad92-76a535517fc9" message="5"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="e0c1715d-5f6d-4eff-b018-040a68621267" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<sub-flow name="scatter-gatherSub_Flow" doc:id="e9c9b8ed-2051-4d76-ac66-82f6c55b58e1" >
+		<logger level="INFO" doc:name="Logger" doc:id="72e53f12-1c86-47d2-acb0-45944be36edf" message="#[payload]"/>
+	</sub-flow>
+</mule>
