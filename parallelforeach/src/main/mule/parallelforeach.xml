@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a91fcc89-8cd0-4bb9-bf65-152c08293c82" >
+		<http:listener-connection host="localhost" port="8083" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="c1a1375e-c028-4d40-b05b-cb512f5f710d" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="Vinodchiru@123" database="paralleleach" />
+	</db:config>
+	<flow name="parallelforeachFlow" doc:id="bab844d1-7fe5-4575-a663-7b2522f06f39" >
+		<http:listener doc:name="Listener" doc:id="3c59fe98-8326-4bf6-9bfd-73896e5e9d20" config-ref="HTTP_Listener_config" path="/parallelforeach"/>
+		<ee:transform doc:name="Transform Message" doc:id="60cdaca5-7ca6-4dff-9774-dec0511ac25b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+1 to 300 map{
+	empid: 100 +$$,
+	empname: "shiva",
+	empage: 25,
+	empcity: "raikal"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<parallel-foreach doc:name="Parallel For Each" doc:id="b0987768-fa6a-4100-bb00-aeea572c1a0b" >
+			<logger level="INFO" doc:name="Logger" doc:id="ba813f78-e261-4e5b-b00c-1323b091f78b" message="#[payload]" />
+			<db:insert doc:id="1cb496af-7e86-4d8a-8fac-65330d2cb8d5" config-ref="Database_Config">
+				<db:sql><![CDATA[insert into paralleleachdb.emp (empid, empname, empage, empcity) values (:empid, :empname, :empage, :empcity)]]></db:sql>
+				<db:input-parameters><![CDATA[#[payload]]]></db:input-parameters>
+			</db:insert>
+		</parallel-foreach>
+	</flow>
+</mule>
