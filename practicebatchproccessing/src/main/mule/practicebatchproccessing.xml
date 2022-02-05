@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="46bc3115-cc9c-4fce-9629-e24d2dd8d0fc" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="d53def04-53db-4fa3-bfb7-d65b3f5456c1" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="Vinodchiru@123" database="parallel" />
+	</db:config>
+	<flow name="practicebatchproccessingFlow" doc:id="b92c496a-c6b8-4ae3-b9a0-14235794c004" >
+		<http:listener doc:name="Listener" doc:id="494994b8-035c-4e0e-8022-53a9954ac6f8" config-ref="HTTP_Listener_config" path="/batch"/>
+		<ee:transform doc:name="Transform Message" doc:id="58773f97-d65d-4387-830b-be515ab28dc6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+1 to 1000 map {
+	
+	vid: 100+$$,
+	vname: "vinod",
+	vphone: 4532675432
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="practicebatchproccessingBatch_Job" doc:id="8c2c7123-07f0-4930-914f-90b7e97f6a84" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="79dce0c5-d9d7-411d-bf6b-5f5b801a35b8" >
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="cf0f173b-f23c-4816-8377-f2e9fa45a855" size="10">
+						<logger level="INFO" doc:name="Logger" doc:id="e175e8ca-2302-4513-9e7d-fcc799b0829a" message="#[payload]"/>
+						<db:bulk-insert doc:id="0f14a6c8-7972-4c9b-8d2d-bfd1f16598d0" config-ref="Database_Config">
+							<db:sql ><![CDATA[insert into parallel.v (vid, vname, vphone) values (:vid, :vname, :vphone)]]></db:sql>
+						</db:bulk-insert>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<ee:transform doc:name="Transform Message" doc:id="b531923b-2475-4718-9c13-536a843ed275" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="381498ba-28e2-45ea-a032-11a400bf375f" message="#[payload]"/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+</mule>
